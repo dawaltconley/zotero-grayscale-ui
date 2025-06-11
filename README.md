@@ -1,8 +1,6 @@
-# Zotero Plugin Template
+# Zotero Plugin: Grayscale UI
 
-My personal template for making Zotero plugins. Simplified from
-[zotero-plugin-template](https://github.com/windingwind/zotero-plugin-template),
-dropping the `zotero-plugin-toolkit` dependency and
-only supporting Zotero 7. Uses
-[zotero-plugin-scaffold](https://github.com/northword/zotero-plugin-scaffold)
-for development and releases.
+A plugin providing partial support for various grayscale UIs.
+
+The idea is to make Zotero more useable on e-ink devices, which lack
+color displays. It may have other uses as well.
