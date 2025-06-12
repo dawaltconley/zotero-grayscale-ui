@@ -1,4 +1,5 @@
-import pluginCss from './styles.scss';
+import readerCss from './reader.scss';
+import internalReaderCss from './internal-reader.scss';
 import { config, version as packageVersion } from '../package.json';
 
 export interface PluginOptions {
@@ -37,9 +38,10 @@ export class Plugin {
     await this.styleExistingTabs();
   }
 
-  shutdown(): void {
+  async shutdown(): Promise<void> {
     this.removeFromAllWindows();
     this.unregisterObserver();
+    await this.unstyleExistingTabs();
   }
 
   addToWindow(window: _ZoteroTypes.MainWindow): void {
@@ -78,9 +80,33 @@ export class Plugin {
     }
     const styles = doc.createElement('style');
     styles.id = this.stylesId;
-    styles.innerText = pluginCss;
+    styles.innerText = readerCss;
     doc.documentElement.appendChild(styles);
+
+    const internal: Document | undefined =
+      // @ts-expect-error no types for _internalReader._primaryView
+      reader?._internalReader?._primaryView?._iframeWindow?.document;
+    const stylesInternalReader = doc.createElement('style');
+    stylesInternalReader.id = this.stylesId;
+    stylesInternalReader.innerText = internalReaderCss;
+    internal?.documentElement?.appendChild(stylesInternalReader);
     this.log('appended styles to tab: ' + reader.tabID);
+  }
+
+  async removeStylesFromReader(reader: _ZoteroTypes.ReaderInstance) {
+    await reader._waitForReader();
+    await reader._initPromise;
+    const doc = reader?._iframeWindow?.document;
+    if (!doc) {
+      this.log(`couldn't remove styles; tab ${reader.tabID} not ready`);
+      return;
+    }
+    doc.getElementById(this.stylesId)?.remove();
+
+    const internal: Document | undefined =
+      // @ts-expect-error no types for _internalReader._primaryView
+      reader?._internalReader?._primaryView?._iframeWindow?.document;
+    internal?.getElementById(this.stylesId)?.remove();
   }
 
   async styleExistingTabs() {
@@ -91,6 +117,16 @@ export class Plugin {
     );
     await Promise.all(readers.map((r) => this.attachStylesToReader(r)));
     this.log('done adding styles to existing tabs');
+  }
+
+  async unstyleExistingTabs() {
+    this.log('removing styles to existing tabs');
+    const readers = Zotero.Reader._readers;
+    this.log(
+      `found ${readers.length} reader tags: ${readers.map((r) => r.tabID).join(', ')}`,
+    );
+    await Promise.all(readers.map((r) => this.removeStylesFromReader(r)));
+    this.log('done removing styles to existing tabs');
   }
 
   #observerID?: string;

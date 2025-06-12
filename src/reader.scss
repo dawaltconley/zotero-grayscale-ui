@@ -1,0 +1,104 @@
+// :root:not([data-color-scheme]){--accent-blue: #4072e5;--accent-blue10: rgba(64, 114, 229, 0.1019607843);--accent-blue30: rgba(64, 114, 229, 0.3019607843);--accent-blue50: rgba(64, 114, 229, 0.5019607843);--accent-gold: #cc9200;--accent-green: #39bf68;--accent-orange: #ff794c;--accent-red: #db2c3a;--accent-teal: #59adc4;--accent-white: #fff;--accent-wood-dark: #996b6f;--accent-wood: #cc7a52;--accent-yellow: #faa700;--fill-primary: rgba(0, 0, 0, 0.8509803922);--fill-secondary: rgba(0, 0, 0, 0.5019607843);--fill-tertiary: rgba(0, 0, 0, 0.2509803922);--fill-quarternary: rgba(0, 0, 0, 0.1019607843);--fill-quinary: rgba(0, 0, 0, 0.0509803922);--fill-senary: rgba(0, 0, 0, 0.0196078431);--color-background: #fff;--color-background50: rgba(255, 255, 255, 0.5019607843);--color-background70: rgba(255, 255, 255, 0.6980392157);--color-border: rgba(0, 0, 0, 0.1490196078);--color-border50: rgba(0, 0, 0, 0.0784313725);--color-button: #fff;--color-button50: rgba(255, 255, 255, 0.5019607843);--color-control: #fff;--color-menu: rgba(246, 246, 246, 0.7215686275);--color-panedivider: #dadada;--color-sidepane: #f2f2f2;--color-tabbar: #f2f2f2;--color-toolbar: #f9f9f9;--color-scrollbar: rgb(194, 194, 194);--color-scrollbar-hover: rgb(125, 125, 125);--color-scrollbar-background: transparent;--tag-blue: #55a6df;--tag-gray: #aaa;--tag-green: #74b04a;--tag-indigo: #5b6dd2;--tag-magenta: #d675e7;--tag-orange: #e59c4c;--tag-plum: #9b5579;--tag-purple: #9e8bdf;--tag-red: #ed706b;--tag-teal: #439781;--tag-yellow: #f8d648;--color-quinary-on-background: #f2f2f2;--color-quarternary-on-background: #e5e5e5;--color-quarternary-on-sidepane: #d9d9d9;--material-background: var(--color-background);--material-background50: var(--color-background50);--material-background70: var(--color-background70);--material-button: var(--color-button);--material-control: var(--color-control);--material-menu: var(--color-menu);--material-sidepane: var(--color-sidepane);--material-tabbar: var(--color-tabbar);--material-toolbar: var(--color-toolbar);--material-mix-quinary: var(--color-quinary-on-background);--material-mix-quarternary: var(--color-quarternary-on-background);--material-border-transparent: 1px solid transparent;--material-border: 1px solid var(--color-border);--material-border50: 1px solid var(--color-border50);--material-panedivider: 1px solid var(--color-panedivider);--material-border-quinary: 1px solid var(--fill-quinary);--material-border-quarternary: 1px solid var(--fill-quarternary)}}
+
+:root:not([data-color-scheme]) {
+  --accent-blue: #4072e5;
+  --accent-blue10: rgba(64, 114, 229, 0.1019607843);
+  --accent-blue30: rgba(64, 114, 229, 0.3019607843);
+  --accent-blue50: rgba(64, 114, 229, 0.5019607843);
+  --accent-gold: #cc9200;
+  --accent-green: #39bf68;
+  --accent-orange: #ff794c;
+  --accent-red: #db2c3a;
+  --accent-teal: #59adc4;
+  --accent-white: #fff;
+  --accent-wood-dark: #996b6f;
+  --accent-wood: #cc7a52;
+  --accent-yellow: #faa700;
+  --fill-primary: black;
+  --fill-secondary: black;
+  --fill-tertiary: black;
+  --fill-quarternary: black;
+  --fill-quinary: white;
+  --fill-senary: white;
+  --color-background: #fff;
+  --color-background50: rgba(255, 255, 255, 0.5019607843);
+  --color-background70: rgba(255, 255, 255, 0.6980392157);
+  --color-border: rgba(0, 0, 0, 0.1490196078);
+  --color-border50: rgba(0, 0, 0, 0.0784313725);
+  --color-button: #fff;
+  --color-button50: rgba(255, 255, 255, 0.5019607843);
+  --color-control: #fff;
+  --color-menu: rgba(246, 246, 246, 0.7215686275);
+  --color-panedivider: white;
+  --color-sidepane: white;
+  --color-tabbar: white;
+  --color-toolbar: white;
+  --color-scrollbar: white;
+  --color-scrollbar-hover: white;
+  --color-scrollbar-background: transparent;
+  --tag-blue: #55a6df;
+  --tag-gray: #aaa;
+  --tag-green: #74b04a;
+  --tag-indigo: #5b6dd2;
+  --tag-magenta: #d675e7;
+  --tag-orange: #e59c4c;
+  --tag-plum: #9b5579;
+  --tag-purple: #9e8bdf;
+  --tag-red: #ed706b;
+  --tag-teal: #439781;
+  --tag-yellow: black;
+  // --tag-yellow: #f8d648;
+  --color-quinary-on-background: white;
+  --color-quarternary-on-background: white;
+  --color-quarternary-on-sidepane: white;
+  --material-background: var(--color-background);
+  --material-background50: var(--color-background50);
+  --material-background70: var(--color-background70);
+  --material-button: var(--color-button);
+  --material-control: var(--color-control);
+  --material-menu: var(--color-menu);
+  --material-sidepane: var(--color-sidepane);
+  --material-tabbar: var(--color-tabbar);
+  --material-toolbar: var(--color-toolbar);
+  --material-mix-quinary: var(--color-quinary-on-background);
+  --material-mix-quarternary: var(--color-quarternary-on-background);
+  --material-border-transparent: 1px solid transparent;
+  --material-border: 1px solid var(--color-border);
+  --material-border50: 1px solid var(--color-border50);
+  --material-panedivider: 1px solid var(--color-panedivider);
+  --material-border-quinary: 1px solid var(--fill-quinary);
+  --material-border-quarternary: 1px solid var(--fill-quarternary);
+}
+
+.toolbar {
+  .divider {
+    border-width: 0px;
+    border-left-width: 1px;
+    border-left-style: dotted;
+    border-radius: unset;
+  }
+
+  .toolbar-button {
+    color: black;
+
+    &:hover,
+    &.active {
+      border: 1px solid black;
+      background-color: transparent;
+    }
+
+    &:hover {
+      border-style: dotted;
+    }
+
+    &:disabled {
+      opacity: 1;
+    }
+
+    & svg,
+    & svg > * {
+      stroke-opacity: 1;
+      fill-opacity: 1;
+    }
+  }
+}

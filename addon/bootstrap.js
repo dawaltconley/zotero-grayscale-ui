@@ -26,7 +26,7 @@ async function startup({ id, version, rootURI }) {
     `${rootURI}/content/scripts/__addonRef__.js`,
   );
   plugin = new __addonInstance__.Plugin({ id, version, rootURI });
-  await plugin.startup();
+  await Promise.resolve(plugin.startup());
 }
 
 function onMainWindowLoad({ window }) {
@@ -37,9 +37,9 @@ function onMainWindowUnload({ window }) {
   plugin?.removeFromWindow(window);
 }
 
-function shutdown() {
+async function shutdown() {
   log('Shutting down plugin');
-  plugin?.shutdown();
+  await Promise.resolve(plugin?.shutdown());
   plugin = undefined;
 }
 
