@@ -1,6 +1,37 @@
 import readerCss from './reader.scss';
 import internalReaderCss from './internal-reader.scss';
+import { isPDFReader, waitForReader, waitForInternalReader } from './utils';
 import { config, version as packageVersion } from '../package.json';
+
+const COLOR_MAP: Record<string, string> = {
+  /** yellow */
+  '#ffd400': '#666666',
+
+  /** red */
+  '#ff6666': '#444444',
+
+  /** green */
+  '#5fb236': '#555555',
+
+  /** blue */
+  '#2ea8e5': '#555555',
+
+  /** purple */
+  '#a28ae5': '#444444',
+
+  /** magenta */
+  '#e56eee': '#777777',
+
+  /** orange */
+  '#f19837': '#888888',
+
+  /** gray */
+  '#aaaaaa': '#aaaaaa',
+};
+
+function toGrayscale(hex: string): string {
+  return COLOR_MAP[hex] || hex;
+}
 
 export interface PluginOptions {
   id: string;
@@ -67,8 +98,7 @@ export class Plugin {
   }
 
   async attachStylesToReader(reader: _ZoteroTypes.ReaderInstance) {
-    await reader._waitForReader();
-    await reader._initPromise;
+    await waitForReader(reader);
     const doc = reader?._iframeWindow?.document;
     if (!doc || !doc.documentElement) {
       this.log(`couldn't attach styles; tab ${reader.tabID} not ready`);
@@ -83,14 +113,19 @@ export class Plugin {
     styles.innerText = readerCss;
     doc.documentElement.appendChild(styles);
 
-    const internal: Document | undefined =
-      // @ts-expect-error no types for _internalReader._primaryView
-      reader?._internalReader?._primaryView?._iframeWindow?.document;
-    const stylesInternalReader = doc.createElement('style');
-    stylesInternalReader.id = this.stylesId;
-    stylesInternalReader.innerText = internalReaderCss;
-    internal?.documentElement?.appendChild(stylesInternalReader);
-    this.log('appended styles to tab: ' + reader.tabID);
+    if (isPDFReader(reader)) {
+      await waitForInternalReader(reader);
+      const internal: Document | undefined =
+        reader._internalReader._primaryView._iframeWindow?.document;
+      const stylesInternalReader = doc.createElement('style');
+      stylesInternalReader.id = this.stylesId;
+      stylesInternalReader.innerText = internalReaderCss;
+      internal?.documentElement?.appendChild(stylesInternalReader);
+      this.log('appended styles to tab: ' + reader.tabID);
+
+      this.monkeyPatchAnnotationRenderer(reader);
+      this.log('monkey patched annotation renderer: ' + reader.tabID);
+    }
   }
 
   async removeStylesFromReader(reader: _ZoteroTypes.ReaderInstance) {
@@ -127,6 +162,32 @@ export class Plugin {
     );
     await Promise.all(readers.map((r) => this.removeStylesFromReader(r)));
     this.log('done removing styles to existing tabs');
+  }
+
+  monkeyPatchAnnotationRenderer(
+    reader: _ZoteroTypes.ReaderInstance<'pdf'>,
+  ): void {
+    const view = reader._primaryView as PDFView;
+
+    // Path 1: interactive page rendering (page.js Renderer._renderCommon reads this)
+    const _getPageAnnotations = view._getPageAnnotations.bind(view);
+    view._getPageAnnotations = function (...args) {
+      const annotations = _getPageAnnotations(...args);
+      annotations.forEach(applyGrayscale);
+      return annotations;
+    };
+
+    // Path 2: thumbnail/print/export rendering
+    const _renderPageAnnotationsOnCanvas =
+      view.renderPageAnnotationsOnCanvas.bind(view);
+    view.renderPageAnnotationsOnCanvas = async function (...args) {
+      view._annotations.forEach(applyGrayscale);
+      try {
+        await _renderPageAnnotationsOnCanvas(...args);
+      } finally {
+        view._annotations.forEach(restoreColor);
+      }
+    };
   }
 
   #observerID?: string;
@@ -211,6 +272,67 @@ export class Plugin {
   }
 
   log(msg: string) {
-    Zotero.debug(`[${config.addonName}] ${msg}`);
+    Zotero.debug(`[${config.addonName}] ${msg}`, 1);
+  }
+}
+
+interface PDFView extends _ZoteroTypes.Reader.PDFView {
+  renderPageAnnotationsOnCanvas: (
+    canvas: HTMLCanvasElement,
+    viewport: unknown,
+    pageIndex: number,
+  ) => Promise<void>;
+  _getPageAnnotations: (pageIndex: number) => Annotation[];
+  _render: (pageIndexes?: number[]) => void;
+  _annotations: Annotation[];
+}
+
+type AnnotationType =
+  | 'image'
+  | 'ink'
+  | 'note'
+  | 'text'
+  | 'highlight'
+  | 'highlight'
+  | 'underline';
+
+interface Annotation {
+  libraryID: number;
+  type: AnnotationType;
+
+  /** color hex, e.g. "#ffd400" */
+  color: string;
+
+  /** added property to store the old color hex */
+  __originalColor?: string;
+  text: string;
+  comment: string;
+  pageLabel: string;
+  sortIndex: string;
+  position: unknown;
+  dateModified: string;
+  id: string;
+  tags: Element[];
+}
+
+/**
+ * Mutate colors on the existing objects in-place to avoid cross-compartment
+ * object creation. Firefox rejects new objects created in the plugin's
+ * compartment when they're passed to the reader's compartment.lace
+ */
+function applyGrayscale(annotation: Annotation): void {
+  annotation.__originalColor = annotation.color;
+  annotation.color = toGrayscale(annotation.color);
+}
+
+/**
+ * Mutate colors on the existing objects in-place to avoid cross-compartment
+ * object creation. Firefox rejects new objects created in the plugin's
+ * compartment when they're passed to the reader's compartment.lace
+ */
+function restoreColor(annotation: Annotation): void {
+  if (annotation.__originalColor) {
+    annotation.color = annotation.__originalColor;
+    // delete annotation.__originalColor
   }
 }
