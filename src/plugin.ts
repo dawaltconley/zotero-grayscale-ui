@@ -1,6 +1,11 @@
 import readerCss from './reader.scss';
 import internalReaderCss from './internal-reader.scss';
-import { applyGrayscale, restoreColor, type Annotation } from './annotations';
+import {
+  applyGrayscale,
+  restoreColor,
+  toGrayscale,
+  type Annotation,
+} from './annotations';
 import { isPDFReader, waitForReader, waitForInternalReader } from './utils';
 import { config, version as packageVersion } from '../package.json';
 
@@ -111,25 +116,27 @@ export class Plugin {
   ): void {
     const view = reader._primaryView as PDFView;
 
-    // Path 1: interactive page rendering (page.js Renderer._renderCommon reads this)
-    const _getPageAnnotations = view._getPageAnnotations.bind(view);
-    view._getPageAnnotations = function (...args) {
-      const annotations = _getPageAnnotations(...args);
-      annotations.forEach(applyGrayscale);
-      return annotations;
-    };
+    monkeyPatchRenderer(view._pages[0]);
 
-    // Path 2: thumbnail/print/export rendering
-    const _renderPageAnnotationsOnCanvas =
-      view.renderPageAnnotationsOnCanvas.bind(view);
-    view.renderPageAnnotationsOnCanvas = async function (...args) {
-      view._annotations.forEach(applyGrayscale);
-      try {
-        await _renderPageAnnotationsOnCanvas(...args);
-      } finally {
-        view._annotations.forEach(restoreColor);
-      }
-    };
+    // // Path 1: interactive page rendering (page.js Renderer._renderCommon reads this)
+    // const _getPageAnnotations = view._getPageAnnotations.bind(view);
+    // view._getPageAnnotations = function (...args) {
+    //   const annotations = _getPageAnnotations(...args);
+    //   annotations.forEach(applyGrayscale);
+    //   return annotations;
+    // };
+    //
+    // // Path 2: thumbnail/print/export rendering
+    // const _renderPageAnnotationsOnCanvas =
+    //   view.renderPageAnnotationsOnCanvas.bind(view);
+    // view.renderPageAnnotationsOnCanvas = async function (...args) {
+    //   view._annotations.forEach(applyGrayscale);
+    //   try {
+    //     await _renderPageAnnotationsOnCanvas(...args);
+    //   } finally {
+    //     view._annotations.forEach(restoreColor);
+    //   }
+    // };
   }
 
   #observerID?: string;
@@ -177,7 +184,113 @@ interface PDFView extends _ZoteroTypes.Reader.PDFView {
     viewport: unknown,
     pageIndex: number,
   ) => Promise<void>;
-  _getPageAnnotations: (pageIndex: number) => Annotation[];
+  _getPageAnnotations?: (pageIndex: number) => Annotation[];
   _render: (pageIndexes?: number[]) => void;
   _annotations: Annotation[];
+  _pages: Page[];
+}
+
+interface Page extends _ZoteroTypes.Reader.Page {
+  _layer: PDFView;
+  _pageIndex: number;
+  _originalPage: unknown;
+  _pageRenderer: Renderer;
+  _detailRenderer: Renderer;
+  refresh(detailView: boolean): void;
+  render(): void;
+  renderAnnotationOnCanvas(
+    annotation: Annotation,
+    canvas: HTMLCanvasElement,
+  ): void;
+}
+
+interface Renderer {
+  _isDetailView: boolean;
+  _layer: PDFView;
+  _originalPage: unknown;
+  _pageIndex: number;
+  _snapshotCanvas: HTMLCanvasElement;
+  _snapshotContext: CanvasRenderingContext2D;
+  _context: CanvasRenderingContext2D | null;
+  _lastSourceCanvas: HTMLCanvasElement | null;
+  _lastSourceSize: { w: number; h: number };
+  _lastRenderSignature: string | null;
+  _isRendering: boolean;
+  readonly _transform: number[];
+  readonly _scale: number;
+  _getSourceCanvas(): HTMLCanvasElement | undefined;
+  _initContext(): void;
+  _invalidateSignature(): void;
+  _maybeRefreshSnapshot(): void;
+  _getViewPoint(p: number[], tfm?: number[]): number[];
+  _getPdfPoint(p: number[]): number[];
+  _getViewRect(rect: number[], tfm?: number[]): number[];
+  _buildRenderSignature(): string;
+  _drawHover(): void;
+  _drawOverlays(): void;
+  _drawNoteIcon(ctx: CanvasRenderingContext2D, color: string): void;
+  _drawCommentIcons(annotations: Annotation[]): void;
+  _drawHighlight(annotation: Annotation): void;
+  _drawUnderline(annotation: Annotation): void;
+  _drawNote(annotation: Annotation): void;
+  _drawImage(annotation: Annotation): void;
+  _drawInk(annotation: Annotation): void;
+  _drawFindResults(): void;
+  _renderCommon(): void;
+  render(): void;
+  renderAnnotationOnCanvas(
+    annotation: Annotation,
+    canvas: HTMLCanvasElement,
+  ): void;
+}
+
+function monkeyPatchRenderer(page: Page): void {
+  const proto: Renderer = Object.getPrototypeOf(page._pageRenderer);
+
+  const _drawHighlight = proto._drawHighlight;
+  proto._drawHighlight = function (annotation, ...args) {
+    applyGrayscale(annotation);
+    _drawHighlight.call(this, annotation, ...args);
+    restoreColor(annotation);
+  };
+
+  const _drawUnderline = proto._drawUnderline;
+  proto._drawUnderline = function (annotation, ...args) {
+    applyGrayscale(annotation);
+    _drawUnderline.call(this, annotation, ...args);
+    restoreColor(annotation);
+  };
+
+  const _drawNote = proto._drawNote;
+  proto._drawNote = function (annotation, ...args) {
+    applyGrayscale(annotation);
+    _drawNote.call(this, annotation, ...args);
+    restoreColor(annotation);
+  };
+
+  const _drawImage = proto._drawImage;
+  proto._drawImage = function (annotation, ...args) {
+    applyGrayscale(annotation);
+    _drawImage.call(this, annotation, ...args);
+    restoreColor(annotation);
+  };
+
+  const _drawInk = proto._drawInk;
+  proto._drawInk = function (annotation, ...args) {
+    applyGrayscale(annotation);
+    _drawInk.call(this, annotation, ...args);
+    restoreColor(annotation);
+  };
+
+  const _drawCommentIcons = proto._drawCommentIcons;
+  proto._drawCommentIcons = function (annotations, ...args) {
+    annotations.forEach((a) => applyGrayscale(a));
+    _drawCommentIcons.call(this, annotations, ...args);
+    annotations.forEach((a) => restoreColor(a));
+  };
+
+  const _drawNoteIcon = proto._drawNoteIcon;
+  proto._drawNoteIcon = function (canvas, color, ...args) {
+    _drawNoteIcon.call(this, canvas, toGrayscale(color), ...args);
+  };
 }
