@@ -1,8 +1,8 @@
 import readerCss from './reader.scss';
 import internalReaderCss from './internal-reader.scss';
 import {
-  applyGrayscale,
-  restoreColor,
+  patchAnnotation,
+  patchAnnotations,
   toGrayscale,
   type Annotation,
 } from './annotations';
@@ -249,44 +249,44 @@ function monkeyPatchRenderer(page: Page): void {
 
   const _drawHighlight = proto._drawHighlight;
   proto._drawHighlight = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawHighlight.call(this, annotation, ...args);
-    restoreColor(annotation);
+    patchAnnotation(annotation, (patched) => {
+      _drawHighlight.call(this, patched, ...args);
+    });
   };
 
   const _drawUnderline = proto._drawUnderline;
   proto._drawUnderline = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawUnderline.call(this, annotation, ...args);
-    restoreColor(annotation);
+    patchAnnotation(annotation, (patched) => {
+      _drawUnderline.call(this, patched, ...args);
+    });
   };
 
   const _drawNote = proto._drawNote;
   proto._drawNote = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawNote.call(this, annotation, ...args);
-    restoreColor(annotation);
+    patchAnnotation(annotation, (patched) => {
+      _drawNote.call(this, patched, ...args);
+    });
   };
 
   const _drawImage = proto._drawImage;
   proto._drawImage = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawImage.call(this, annotation, ...args);
-    restoreColor(annotation);
+    patchAnnotation(annotation, (patched) => {
+      _drawImage.call(this, patched, ...args);
+    });
   };
 
   const _drawInk = proto._drawInk;
   proto._drawInk = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawInk.call(this, annotation, ...args);
-    restoreColor(annotation);
+    patchAnnotation(annotation, (patched) => {
+      _drawInk.call(this, patched, ...args);
+    });
   };
 
   const _drawCommentIcons = proto._drawCommentIcons;
   proto._drawCommentIcons = function (annotations, ...args) {
-    annotations.forEach((a) => applyGrayscale(a));
-    _drawCommentIcons.call(this, annotations, ...args);
-    annotations.forEach((a) => restoreColor(a));
+    patchAnnotations(annotations, (patched) => {
+      _drawCommentIcons.call(this, patched, ...args);
+    });
   };
 
   const _drawNoteIcon = proto._drawNoteIcon;
@@ -296,8 +296,8 @@ function monkeyPatchRenderer(page: Page): void {
 
   const renderAnnotationOnCanvas = proto.renderAnnotationOnCanvas;
   proto.renderAnnotationOnCanvas = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    renderAnnotationOnCanvas.call(this, annotation, ...args);
-    restoreColor(annotation);
+    patchAnnotation(annotation, (patched) => {
+      renderAnnotationOnCanvas.call(this, patched, ...args);
+    });
   };
 }

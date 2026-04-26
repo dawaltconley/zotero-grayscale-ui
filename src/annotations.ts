@@ -25,6 +25,30 @@ export function restoreColor(annotation: Annotation): void {
   }
 }
 
+export function patchAnnotation(
+  annotation: Annotation,
+  callback: (patched: Annotation) => any,
+): void {
+  try {
+    applyGrayscale(annotation);
+    callback(annotation);
+  } finally {
+    restoreColor(annotation);
+  }
+}
+
+export function patchAnnotations(
+  annotations: Annotation[],
+  callback: (patched: Annotation[]) => any,
+): void {
+  try {
+    annotations.forEach((a) => applyGrayscale(a));
+    callback(annotations);
+  } finally {
+    annotations.forEach((a) => restoreColor(a));
+  }
+}
+
 const COLOR_MAP: Record<string, string> = {
   /** yellow */
   '#ffd400': '#666666',
