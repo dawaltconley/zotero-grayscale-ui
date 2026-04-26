@@ -49,31 +49,59 @@ export function patchAnnotations(
   }
 }
 
+// even steps, all in the DU4 light gray range
 const COLOR_MAP: Record<string, string> = {
   /** yellow */
-  '#ffd400': '#666666',
+  '#ffd400': '#BFBFBF',
 
   /** red */
-  '#ff6666': '#444444',
+  '#ff6666': '#878787',
 
   /** green */
-  '#5fb236': '#555555',
+  '#5fb236': '#7B7B7B',
 
   /** blue */
-  '#2ea8e5': '#555555',
+  '#2ea8e5': '#707070',
 
   /** purple */
-  '#a28ae5': '#444444',
+  '#a28ae5': '#929292',
 
   /** magenta */
-  '#e56eee': '#777777',
+  '#e56eee': '#9D9D9D',
 
   /** orange */
-  '#f19837': '#888888',
+  '#f19837': '#A8A8A8',
 
   /** gray */
-  '#aaaaaa': '#aaaaaa',
+  '#aaaaaa': '#B4B4B4',
 };
+
+// // even steps, all in the DU4 light-to-dark gray range
+// const COLOR_MAP: Record<string, string> = {
+//   /** yellow */
+//   '#ffd400': '#BFBFBF',
+//
+//   /** red */
+//   '#ff6666': '#646464',
+//
+//   /** green */
+//   '#5fb236': '#525252',
+//
+//   /** blue */
+//   '#2ea8e5': '#404040',
+//
+//   /** purple */
+//   '#a28ae5': '#767676',
+//
+//   /** magenta */
+//   '#e56eee': '#898989',
+//
+//   /** orange */
+//   '#f19837': '#9B9B9B',
+//
+//   /** gray */
+//   '#aaaaaa': '#ADADAD',
+// };
 
 export function toGrayscale(hex: string): string {
   return COLOR_MAP[hex] || hex;
