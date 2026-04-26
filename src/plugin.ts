@@ -112,26 +112,6 @@ export class Plugin {
     const view = reader._primaryView as PDFView;
 
     monkeyPatchRenderer(view._pages[0]);
-
-    // // Path 1: interactive page rendering (page.js Renderer._renderCommon reads this)
-    // const _getPageAnnotations = view._getPageAnnotations.bind(view);
-    // view._getPageAnnotations = function (...args) {
-    //   const annotations = _getPageAnnotations(...args);
-    //   annotations.forEach(applyGrayscale);
-    //   return annotations;
-    // };
-    //
-    // // Path 2: thumbnail/print/export rendering
-    // const _renderPageAnnotationsOnCanvas =
-    //   view.renderPageAnnotationsOnCanvas.bind(view);
-    // view.renderPageAnnotationsOnCanvas = async function (...args) {
-    //   view._annotations.forEach(applyGrayscale);
-    //   try {
-    //     await _renderPageAnnotationsOnCanvas(...args);
-    //   } finally {
-    //     view._annotations.forEach(restoreColor);
-    //   }
-    // };
   }
 
   #observerID?: string;
