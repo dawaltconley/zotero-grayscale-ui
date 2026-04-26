@@ -293,4 +293,11 @@ function monkeyPatchRenderer(page: Page): void {
   proto._drawNoteIcon = function (canvas, color, ...args) {
     _drawNoteIcon.call(this, canvas, toGrayscale(color), ...args);
   };
+
+  const renderAnnotationOnCanvas = proto.renderAnnotationOnCanvas;
+  proto.renderAnnotationOnCanvas = function (annotation, ...args) {
+    applyGrayscale(annotation);
+    renderAnnotationOnCanvas.call(this, annotation, ...args);
+    restoreColor(annotation);
+  };
 }
