@@ -1,11 +1,6 @@
 import readerCss from './reader.scss';
 import internalReaderCss from './internal-reader.scss';
-import {
-  patchAnnotation,
-  patchAnnotations,
-  toGrayscale,
-  type Annotation,
-} from './annotations';
+import { toGrayscale, type Annotation } from './annotations';
 import { isPDFReader, waitForReader, waitForInternalReader } from './utils';
 import { config, version as packageVersion } from '../package.json';
 
@@ -245,59 +240,19 @@ interface Renderer {
 }
 
 function monkeyPatchRenderer(page: Page): void {
-  const proto: Renderer = Object.getPrototypeOf(page._pageRenderer);
+  if (!page._pageRenderer._context) return;
+  const proto: CanvasRenderingContext2D = Object.getPrototypeOf(
+    page._pageRenderer._context,
+  );
 
-  const _drawHighlight = proto._drawHighlight;
-  proto._drawHighlight = function (annotation, ...args) {
-    patchAnnotation(annotation, (patched) => {
-      _drawHighlight.call(this, patched, ...args);
-    });
-  };
-
-  const _drawUnderline = proto._drawUnderline;
-  proto._drawUnderline = function (annotation, ...args) {
-    patchAnnotation(annotation, (patched) => {
-      _drawUnderline.call(this, patched, ...args);
-    });
-  };
-
-  const _drawNote = proto._drawNote;
-  proto._drawNote = function (annotation, ...args) {
-    patchAnnotation(annotation, (patched) => {
-      _drawNote.call(this, patched, ...args);
-    });
-  };
-
-  const _drawImage = proto._drawImage;
-  proto._drawImage = function (annotation, ...args) {
-    patchAnnotation(annotation, (patched) => {
-      _drawImage.call(this, patched, ...args);
-    });
-  };
-
-  const _drawInk = proto._drawInk;
-  proto._drawInk = function (annotation, ...args) {
-    patchAnnotation(annotation, (patched) => {
-      _drawInk.call(this, patched, ...args);
-    });
-  };
-
-  const _drawCommentIcons = proto._drawCommentIcons;
-  proto._drawCommentIcons = function (annotations, ...args) {
-    patchAnnotations(annotations, (patched) => {
-      _drawCommentIcons.call(this, patched, ...args);
-    });
-  };
-
-  const _drawNoteIcon = proto._drawNoteIcon;
-  proto._drawNoteIcon = function (canvas, color, ...args) {
-    _drawNoteIcon.call(this, canvas, toGrayscale(color), ...args);
-  };
-
-  const renderAnnotationOnCanvas = proto.renderAnnotationOnCanvas;
-  proto.renderAnnotationOnCanvas = function (annotation, ...args) {
-    patchAnnotation(annotation, (patched) => {
-      renderAnnotationOnCanvas.call(this, patched, ...args);
-    });
-  };
+  Object.defineProperty(proto, 'fillStyle', {
+    // TODO use CanvasPattern to draw dithering highlights on B&W displays
+    set: function (style: string | CanvasGradient | CanvasPattern) {
+      if (typeof style === 'string') {
+        this.fillStyle = toGrayscale(style);
+      } else {
+        this.fillStyle = style;
+      }
+    },
+  });
 }
