@@ -1,29 +1,6 @@
-export type AnnotationType =
-  | 'image'
-  | 'ink'
-  | 'note'
-  | 'text'
-  | 'highlight'
-  | 'highlight'
-  | 'underline';
-
-export interface Annotation {
-  libraryID: number;
-  type: AnnotationType;
-
-  /** color hex, e.g. "#ffd400" */
-  color: string;
-
+export interface Annotation extends _ZoteroTypes.Reader.Annotation {
   /** added property to store the old color hex */
   __originalColor?: string;
-  text: string;
-  comment: string;
-  pageLabel: string;
-  sortIndex: string;
-  position: unknown;
-  dateModified: string;
-  id: string;
-  tags: Element[];
 }
 
 /**
@@ -33,7 +10,7 @@ export interface Annotation {
  */
 export function applyGrayscale(annotation: Annotation): void {
   annotation.__originalColor = annotation.color;
-  annotation.color = toGrayscale(annotation.color);
+  annotation.color = annotation.color && toGrayscale(annotation.color);
 }
 
 /**
