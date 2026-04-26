@@ -247,50 +247,64 @@ interface Renderer {
 function monkeyPatchRenderer(page: Page): void {
   const proto: Renderer = Object.getPrototypeOf(page._pageRenderer);
 
-  const _drawHighlight = proto._drawHighlight;
-  proto._drawHighlight = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawHighlight.call(this, annotation, ...args);
-    restoreColor(annotation);
+  const _renderCommon = proto._renderCommon;
+  proto._renderCommon = function (...args) {
+    let annotations: Annotation[] = [];
+    try {
+      annotations =
+        this._layer._getPageAnnotations?.call(this._layer, this._pageIndex) ||
+        [];
+      annotations.forEach(applyGrayscale);
+      _renderCommon.call(this, ...args);
+    } finally {
+      annotations.forEach(restoreColor);
+    }
   };
 
-  const _drawUnderline = proto._drawUnderline;
-  proto._drawUnderline = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawUnderline.call(this, annotation, ...args);
-    restoreColor(annotation);
-  };
-
-  const _drawNote = proto._drawNote;
-  proto._drawNote = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawNote.call(this, annotation, ...args);
-    restoreColor(annotation);
-  };
-
-  const _drawImage = proto._drawImage;
-  proto._drawImage = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawImage.call(this, annotation, ...args);
-    restoreColor(annotation);
-  };
-
-  const _drawInk = proto._drawInk;
-  proto._drawInk = function (annotation, ...args) {
-    applyGrayscale(annotation);
-    _drawInk.call(this, annotation, ...args);
-    restoreColor(annotation);
-  };
-
-  const _drawCommentIcons = proto._drawCommentIcons;
-  proto._drawCommentIcons = function (annotations, ...args) {
-    annotations.forEach((a) => applyGrayscale(a));
-    _drawCommentIcons.call(this, annotations, ...args);
-    annotations.forEach((a) => restoreColor(a));
-  };
-
-  const _drawNoteIcon = proto._drawNoteIcon;
-  proto._drawNoteIcon = function (canvas, color, ...args) {
-    _drawNoteIcon.call(this, canvas, toGrayscale(color), ...args);
-  };
+  // const _drawHighlight = proto._drawHighlight;
+  // proto._drawHighlight = function (annotation, ...args) {
+  //   applyGrayscale(annotation);
+  //   _drawHighlight.call(this, annotation, ...args);
+  //   restoreColor(annotation);
+  // };
+  //
+  // const _drawUnderline = proto._drawUnderline;
+  // proto._drawUnderline = function (annotation, ...args) {
+  //   applyGrayscale(annotation);
+  //   _drawUnderline.call(this, annotation, ...args);
+  //   restoreColor(annotation);
+  // };
+  //
+  // const _drawNote = proto._drawNote;
+  // proto._drawNote = function (annotation, ...args) {
+  //   applyGrayscale(annotation);
+  //   _drawNote.call(this, annotation, ...args);
+  //   restoreColor(annotation);
+  // };
+  //
+  // const _drawImage = proto._drawImage;
+  // proto._drawImage = function (annotation, ...args) {
+  //   applyGrayscale(annotation);
+  //   _drawImage.call(this, annotation, ...args);
+  //   restoreColor(annotation);
+  // };
+  //
+  // const _drawInk = proto._drawInk;
+  // proto._drawInk = function (annotation, ...args) {
+  //   applyGrayscale(annotation);
+  //   _drawInk.call(this, annotation, ...args);
+  //   restoreColor(annotation);
+  // };
+  //
+  // const _drawCommentIcons = proto._drawCommentIcons;
+  // proto._drawCommentIcons = function (annotations, ...args) {
+  //   annotations.forEach((a) => applyGrayscale(a));
+  //   _drawCommentIcons.call(this, annotations, ...args);
+  //   annotations.forEach((a) => restoreColor(a));
+  // };
+  //
+  // const _drawNoteIcon = proto._drawNoteIcon;
+  // proto._drawNoteIcon = function (canvas, color, ...args) {
+  //   _drawNoteIcon.call(this, canvas, toGrayscale(color), ...args);
+  // };
 }
