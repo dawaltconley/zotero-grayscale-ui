@@ -235,4 +235,10 @@ function monkeyPatchRenderer(page: Page): void {
       }
     },
   });
+
+  Object.defineProperty(proto, 'globalAlpha', {
+    set: function (_alpha: number) {
+      this.globalAlpha = 1;
+    },
+  });
 }
