@@ -18,7 +18,7 @@
   --fill-secondary: black;
   --fill-tertiary: black;
   --fill-quarternary: black;
-  --fill-quinary: white;
+  --fill-quinary: #bfbfbf;
   --fill-senary: white;
   --color-background: #fff;
   --color-background50: rgba(255, 255, 255, 0.5019607843);
@@ -29,7 +29,9 @@
   --color-button50: rgba(255, 255, 255, 0.5019607843);
   --color-control: #fff;
   --color-menu: rgba(246, 246, 246, 0.7215686275);
-  --color-panedivider: white;
+  // --color-panedivider: white;
+  --color-panedivider: #6f6f6f;
+  // --color-panedivider: black;
   --color-sidepane: white;
   --color-tabbar: white;
   --color-toolbar: white;
@@ -104,5 +106,41 @@ body {
       stroke-opacity: 1;
       fill-opacity: 1;
     }
+  }
+}
+
+.context-menu {
+  box-shadow: none;
+  color: black;
+
+  .group:not(:last-child) {
+    // replace with dotted border on b&w display
+    box-shadow: #bfbfbf 0px 1px 0px 0px;
+  }
+
+  // hard outline for colro boxes
+  .icon svg path:nth-child(2) {
+    stroke: black;
+    stroke-opacity: 1;
+  }
+
+  .group .row.basic:disabled {
+    // color: black;
+    // text-decoration: line-through;
+    color: #6f6f6f;
+  }
+}
+
+.selection-popup {
+  $border-color: black;
+  border: 1px solid $border-color;
+  box-shadow: none;
+
+  &:before {
+    border-bottom-color: $border-color !important;
+  }
+
+  .color-button svg path:nth-child(2) {
+    stroke-opacity: 1;
   }
 }
