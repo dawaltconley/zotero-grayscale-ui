@@ -23,7 +23,10 @@ export async function waitForInternalReader(
   reader: _ZoteroTypes.ReaderInstance,
 ): Promise<void> {
   if (reader._internalReader) {
-    await reader._internalReader._primaryView.initializedPromise;
+    await Promise.all([
+      reader._internalReader._primaryView.initializedPromise,
+      reader._internalReader._secondaryView?.initializedPromise,
+    ]);
   }
 }
 
