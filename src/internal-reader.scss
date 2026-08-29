@@ -1,12 +1,14 @@
+@use 'variables.scss';
+
 .annotationOverlay {
   // ordinary highlights and underlines
   .overlayRect {
-    background-color: #bfbfbf !important;
+    background-color: var(--du4-light) !important;
     opacity: 1 !important;
 
     // underline highlights should be darker
     &[style*='opacity: 1'] {
-      background-color: #6f6f6f !important;
+      background-color: var(--du4-dark) !important;
     }
   }
 
@@ -17,13 +19,13 @@
     {
       // don't change black pen annotations
       &:not([stroke='#000000'], [stroke='#000'], [stroke='black']) {
-        stroke: hsl(0, 0, 70) !important;
+        stroke: var(--du4-light) !important;
       }
     }
 
     // note annotations
     g polygon[fill]:not([fill='none']) {
-      fill: hsl(0, 0, 70) !important;
+      fill: var(--du4-light) !important;
     }
   }
 }
@@ -31,4 +33,9 @@
 // text annotations
 .customAnnotationLayer .textAnnotation {
   color: black !important;
+}
+
+.page {
+  box-shadow: none !important;
+  border: 1px solid var(--du4-light) !important;
 }
