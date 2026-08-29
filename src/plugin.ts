@@ -129,7 +129,9 @@ export class Plugin {
             await Promise.all(
               tabIDs.map(async (id) => {
                 const reader = Zotero.Reader.getByTabID(id.toString());
-                await this.attachStylesToReader(reader);
+                if (reader) {
+                  await this.attachStylesToReader(reader);
+                }
               }),
             );
           }
