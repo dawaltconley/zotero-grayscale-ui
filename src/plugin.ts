@@ -171,7 +171,7 @@ interface Page extends _ZoteroTypes.Reader.Page {
   _layer: PDFView;
   _pageIndex: number;
   _originalPage: unknown;
-  _pageRenderer: Renderer;
+  _pageRenderer?: Renderer;
   _detailRenderer: Renderer;
   refresh(detailView: boolean): void;
   render(): void;
@@ -222,7 +222,7 @@ interface Renderer {
 }
 
 function monkeyPatchRenderer(page: Page): void {
-  if (!page._pageRenderer._context) return;
+  if (!page._pageRenderer?._context) return;
   const proto: CanvasRenderingContext2D = Object.getPrototypeOf(
     page._pageRenderer._context,
   );

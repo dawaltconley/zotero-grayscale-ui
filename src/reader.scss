@@ -114,11 +114,11 @@ body {
   color: black;
 
   .group:not(:last-child) {
-    // replace with dotted border on b&w display
+    // TODO replace with dotted border on b&w display
     box-shadow: #bfbfbf 0px 1px 0px 0px;
   }
 
-  // hard outline for colro boxes
+  // hard outline for color boxes
   .icon svg path:nth-child(2) {
     stroke: black;
     stroke-opacity: 1;
@@ -127,7 +127,15 @@ body {
   .group .row.basic:disabled {
     // color: black;
     // text-decoration: line-through;
-    color: #6f6f6f;
+    color: #bfbfbf;
+    opacity: 1;
+  }
+}
+
+// popup when selecting an annotation
+.annotation-popup {
+  .icon-highlight svg path {
+    fill: #bfbfbf !important;
   }
 }
 
