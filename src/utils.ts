@@ -32,6 +32,6 @@ export async function waitForInternalReader(
 
 export function getCurrentReader(
   window: _ZoteroTypes.MainWindow,
-): _ZoteroTypes.ReaderInstance {
+): _ZoteroTypes.ReaderInstance | undefined {
   return Zotero.Reader.getByTabID(window.Zotero_Tabs.selectedID);
 }
