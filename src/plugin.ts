@@ -1,9 +1,10 @@
 import readerCss from './reader.scss';
-import pdfReaderCss from './internal-reader-pdf.scss';
-import snapshotReaderCss from './internal-reader-snapshot.scss';
+import internalPdfReaderCss from './internal-reader-pdf.scss';
+import internalReaderCss from './internal-reader.scss';
 import { toGrayscale, type Annotation } from './annotations';
 import {
   isPDFReader,
+  isEpubReader,
   isSnapshotReader,
   waitForReader,
   waitForInternalReader,
@@ -65,7 +66,6 @@ export class Plugin {
     const internal: Document | undefined =
       // @ts-expect-error -- _iframeWindow is in fact available on all readers
       reader._internalReader._primaryView._iframeWindow?.document;
-
     if (!internal) {
       this.log("couldn't find internal reader: " + reader.tabID);
       return;
@@ -73,9 +73,9 @@ export class Plugin {
 
     const stylesInternalReader = doc.createElement('style');
     stylesInternalReader.id = this.stylesId;
+
     if (isPDFReader(reader)) {
-      this.log('is pdf reader');
-      stylesInternalReader.innerText = pdfReaderCss;
+      stylesInternalReader.innerText = internalPdfReaderCss;
       internal?.documentElement?.appendChild(stylesInternalReader);
       this.log('appended styles to tab: ' + reader.tabID);
 
@@ -83,9 +83,8 @@ export class Plugin {
       this.log('monkey patched annotation renderer: ' + reader.tabID);
     }
 
-    if (isSnapshotReader(reader)) {
-      this.log('is snapshot reader');
-      stylesInternalReader.innerText = snapshotReaderCss;
+    if (isEpubReader(reader) || isSnapshotReader(reader)) {
+      stylesInternalReader.innerText = internalReaderCss;
       const root = internal.getElementById('annotation-overlay')?.shadowRoot;
       root?.appendChild(stylesInternalReader);
       this.log('appended styles to tab: ' + reader.tabID);
