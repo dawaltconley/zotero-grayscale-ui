@@ -1,0 +1,13 @@
+@use 'variables.scss';
+
+g[data-annotation-id] {
+  fill: var(--du4-light) !important;
+
+  rect {
+    fill: var(--du4-dark) !important;
+  }
+
+  path {
+    opacity: 100% !important;
+  }
+}

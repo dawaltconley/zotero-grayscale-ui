@@ -1,7 +1,13 @@
 import readerCss from './reader.scss';
-import internalReaderCss from './internal-reader.scss';
+import pdfReaderCss from './internal-reader-pdf.scss';
+import snapshotReaderCss from './internal-reader-snapshot.scss';
 import { toGrayscale, type Annotation } from './annotations';
-import { isPDFReader, waitForReader, waitForInternalReader } from './utils';
+import {
+  isPDFReader,
+  isSnapshotReader,
+  waitForReader,
+  waitForInternalReader,
+} from './utils';
 import { config, version as packageVersion } from '../package.json';
 
 export interface PluginOptions {
@@ -55,24 +61,39 @@ export class Plugin {
     styles.innerText = readerCss;
     doc.documentElement.appendChild(styles);
 
+    await waitForInternalReader(reader);
+    const internal: Document | undefined =
+      // @ts-expect-error -- _iframeWindow is in fact available on all readers
+      reader._internalReader._primaryView._iframeWindow?.document;
+
+    if (!internal) {
+      this.log("couldn't find internal reader: " + reader.tabID);
+      return;
+    }
+
+    const stylesInternalReader = doc.createElement('style');
+    stylesInternalReader.id = this.stylesId;
     if (isPDFReader(reader)) {
-      await waitForInternalReader(reader);
-      const internal: Document | undefined =
-        reader._internalReader._primaryView._iframeWindow?.document;
-      const stylesInternalReader = doc.createElement('style');
-      stylesInternalReader.id = this.stylesId;
-      stylesInternalReader.innerText = internalReaderCss;
+      this.log('is pdf reader');
+      stylesInternalReader.innerText = pdfReaderCss;
       internal?.documentElement?.appendChild(stylesInternalReader);
       this.log('appended styles to tab: ' + reader.tabID);
 
       this.monkeyPatchAnnotationRenderer(reader);
       this.log('monkey patched annotation renderer: ' + reader.tabID);
     }
+
+    if (isSnapshotReader(reader)) {
+      this.log('is snapshot reader');
+      stylesInternalReader.innerText = snapshotReaderCss;
+      const root = internal.getElementById('annotation-overlay')?.shadowRoot;
+      root?.appendChild(stylesInternalReader);
+      this.log('appended styles to tab: ' + reader.tabID);
+    }
   }
 
   async removeStylesFromReader(reader: _ZoteroTypes.ReaderInstance) {
-    await reader._waitForReader();
-    await reader._initPromise;
+    await waitForReader(reader);
     const doc = reader?._iframeWindow?.document;
     if (!doc) {
       this.log(`couldn't remove styles; tab ${reader.tabID} not ready`);
