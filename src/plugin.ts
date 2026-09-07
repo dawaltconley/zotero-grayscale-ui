@@ -100,10 +100,25 @@ export class Plugin {
     }
     doc.getElementById(this.stylesId)?.remove();
 
+    await waitForInternalReader(reader);
     const internal: Document | undefined =
-      // @ts-expect-error no types for _internalReader._primaryView
+      // @ts-expect-error -- _iframeWindow is in fact available on all readers
       reader?._internalReader?._primaryView?._iframeWindow?.document;
-    internal?.getElementById(this.stylesId)?.remove();
+    if (!internal) {
+      this.log("couldn't find internal reader: " + reader.tabID);
+      return;
+    }
+
+    if (isPDFReader(reader)) {
+      internal.getElementById(this.stylesId)?.remove();
+    }
+
+    if (isEpubReader(reader) || isSnapshotReader(reader)) {
+      const root = internal.getElementById('annotation-overlay')?.shadowRoot;
+      root?.getElementById(this.stylesId)?.remove();
+    }
+
+    this.log('removed styles from tab: ' + reader.tabID);
   }
 
   async styleExistingTabs() {
