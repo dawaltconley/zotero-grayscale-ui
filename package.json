@@ -1,7 +1,7 @@
 {
   "name": "zotero-grayscale-ui",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Zotero plugin providing various grayscale UI options.",
   "config": {
     "addonName": "Grayscale UI",
