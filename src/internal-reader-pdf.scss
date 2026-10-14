@@ -10,6 +10,11 @@
     &[style*='opacity: 1'] {
       background-color: var(--du4-dark) !important;
     }
+
+    // hide highlights on PDF links
+    &[style*='opacity: 0.1'] {
+      background-color: transparent !important;
+    }
   }
 
   .overlayVector {
