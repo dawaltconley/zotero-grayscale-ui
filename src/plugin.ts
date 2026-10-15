@@ -1,7 +1,6 @@
 import readerCss from './reader.scss';
 import internalPdfReaderCss from './internal-reader-pdf.scss';
 import internalReaderCss from './internal-reader.scss';
-import { toGrayscale, type Annotation } from './annotations';
 import {
   isPDFReader,
   isEpubReader,
@@ -78,9 +77,6 @@ export class Plugin {
       stylesInternalReader.innerText = internalPdfReaderCss;
       internal?.documentElement?.appendChild(stylesInternalReader);
       this.log('appended styles to tab: ' + reader.tabID);
-
-      this.monkeyPatchAnnotationRenderer(reader);
-      this.log('monkey patched annotation renderer: ' + reader.tabID);
     }
 
     if (isEpubReader(reader) || isSnapshotReader(reader)) {
@@ -141,14 +137,6 @@ export class Plugin {
     this.log('done removing styles to existing tabs');
   }
 
-  monkeyPatchAnnotationRenderer(
-    reader: _ZoteroTypes.ReaderInstance<'pdf'>,
-  ): void {
-    const view = reader._primaryView as PDFView;
-
-    monkeyPatchRenderer(view._pages[0]);
-  }
-
   #observerID?: string;
   registerObserver() {
     this.log('registering tab observer');
@@ -188,94 +176,4 @@ export class Plugin {
   log(msg: string) {
     Zotero.debug(`[${config.addonName}] ${msg}`, 1);
   }
-}
-
-interface PDFView extends _ZoteroTypes.Reader.PDFView {
-  renderPageAnnotationsOnCanvas: (
-    canvas: HTMLCanvasElement,
-    viewport: unknown,
-    pageIndex: number,
-  ) => Promise<void>;
-  _getPageAnnotations?: (pageIndex: number) => Annotation[];
-  _render: (pageIndexes?: number[]) => void;
-  _annotations: Annotation[];
-  _pages: Page[];
-}
-
-interface Page extends _ZoteroTypes.Reader.Page {
-  _layer: PDFView;
-  _pageIndex: number;
-  _originalPage: unknown;
-  _pageRenderer?: Renderer;
-  _detailRenderer: Renderer;
-  refresh(detailView: boolean): void;
-  render(): void;
-  renderAnnotationOnCanvas(
-    annotation: Annotation,
-    canvas: HTMLCanvasElement,
-  ): void;
-}
-
-interface Renderer {
-  _isDetailView: boolean;
-  _layer: PDFView;
-  _originalPage: unknown;
-  _pageIndex: number;
-  _snapshotCanvas: HTMLCanvasElement;
-  _snapshotContext: CanvasRenderingContext2D;
-  _context: CanvasRenderingContext2D | null;
-  _lastSourceCanvas: HTMLCanvasElement | null;
-  _lastSourceSize: { w: number; h: number };
-  _lastRenderSignature: string | null;
-  _isRendering: boolean;
-  readonly _transform: number[];
-  readonly _scale: number;
-  _getSourceCanvas(): HTMLCanvasElement | undefined;
-  _initContext(): void;
-  _invalidateSignature(): void;
-  _maybeRefreshSnapshot(): void;
-  _getViewPoint(p: number[], tfm?: number[]): number[];
-  _getPdfPoint(p: number[]): number[];
-  _getViewRect(rect: number[], tfm?: number[]): number[];
-  _buildRenderSignature(): string;
-  _drawHover(): void;
-  _drawOverlays(): void;
-  _drawNoteIcon(ctx: CanvasRenderingContext2D, color: string): void;
-  _drawCommentIcons(annotations: Annotation[]): void;
-  _drawHighlight(annotation: Annotation): void;
-  _drawUnderline(annotation: Annotation): void;
-  _drawNote(annotation: Annotation): void;
-  _drawImage(annotation: Annotation): void;
-  _drawInk(annotation: Annotation): void;
-  _drawFindResults(): void;
-  _renderCommon(): void;
-  render(): void;
-  renderAnnotationOnCanvas(
-    annotation: Annotation,
-    canvas: HTMLCanvasElement,
-  ): void;
-}
-
-function monkeyPatchRenderer(page: Page): void {
-  if (!page._pageRenderer?._context) return;
-  const proto: CanvasRenderingContext2D = Object.getPrototypeOf(
-    page._pageRenderer._context,
-  );
-
-  Object.defineProperty(proto, 'fillStyle', {
-    // TODO use CanvasPattern to draw dithering highlights on B&W displays
-    set: function (style: string | CanvasGradient | CanvasPattern) {
-      if (typeof style === 'string') {
-        this.fillStyle = toGrayscale(style);
-      } else {
-        this.fillStyle = style;
-      }
-    },
-  });
-
-  Object.defineProperty(proto, 'globalAlpha', {
-    set: function (_alpha: number) {
-      this.globalAlpha = 1;
-    },
-  });
 }
