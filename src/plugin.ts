@@ -45,10 +45,13 @@ export class Plugin {
     await this.unstyleExistingTabs();
   }
 
+  #sdtObservers = new Map<string, MutationObserver>();
+
   async attachStylesToReader(reader: _ZoteroTypes.ReaderInstance) {
     await waitForReader(reader);
-    const doc = reader?._iframeWindow?.document;
-    if (!doc || !doc.documentElement) {
+    const win = reader._iframeWindow;
+    const doc = win?.document;
+    if (!win || !doc || !doc.documentElement) {
       this.log(`couldn't attach styles; tab ${reader.tabID} not ready`);
       return;
     }
@@ -74,16 +77,53 @@ export class Plugin {
     stylesInternalReader.id = this.stylesId;
 
     if (isPDFReader(reader)) {
-      stylesInternalReader.innerText = internalPdfReaderCss;
-      internal?.documentElement?.appendChild(stylesInternalReader);
+      if (!internal.getElementById(this.stylesId)) {
+        stylesInternalReader.innerText = internalPdfReaderCss;
+        internal?.documentElement?.appendChild(stylesInternalReader);
+      }
       this.log('appended styles to tab: ' + reader.tabID);
+
+      const observer: MutationObserver = new win.MutationObserver(() =>
+        this.attachSTDStylesToReader(reader),
+      );
+      this.#sdtObservers.set(reader.tabID, observer);
+      for (const id of ['primary-view', 'secondary-view']) {
+        const el = doc.getElementById(id);
+        if (el) observer.observe(el, { childList: true });
+      }
+      await this.attachSTDStylesToReader(reader);
+      this.log('appended styles to SDT reader in tab: ' + reader.tabID);
     }
 
     if (isEpubReader(reader) || isSnapshotReader(reader)) {
       stylesInternalReader.innerText = internalReaderCss;
+      // also accessible via reader._internalReader._primaryView._annotationShadowRoot
       const root = internal.getElementById('annotation-overlay')?.shadowRoot;
-      root?.appendChild(stylesInternalReader);
+      if (root && !root.getElementById(this.stylesId)) {
+        root?.appendChild(stylesInternalReader);
+      }
       this.log('appended styles to tab: ' + reader.tabID);
+    }
+  }
+
+  async attachSTDStylesToReader(
+    reader: _ZoteroTypes.ReaderInstance<'pdf'>,
+  ): Promise<void> {
+    const view: _ZoteroTypes.Reader.PDFView | undefined =
+      /* @ts-expect-error -- _primarySDTView not included in types */
+      reader._internalReader._primarySDTView;
+    await Promise.resolve(view?.initializedPromise);
+    const doc: Document | undefined = view?._iframeWindow?.document;
+    if (!view || !doc) {
+      this.log("couldn't find SDT reader: " + reader.tabID);
+      return;
+    }
+    const stylesSDTReader = doc.createElement('style');
+    stylesSDTReader.id = this.stylesId;
+    stylesSDTReader.innerText = internalReaderCss;
+    const root = doc.getElementById('annotation-overlay')?.shadowRoot;
+    if (root && !root.getElementById(this.stylesId)) {
+      root.appendChild(stylesSDTReader);
     }
   }
 
@@ -113,6 +153,8 @@ export class Plugin {
       const root = internal.getElementById('annotation-overlay')?.shadowRoot;
       root?.getElementById(this.stylesId)?.remove();
     }
+
+    this.#sdtObservers.get(reader.tabID)?.disconnect();
 
     this.log('removed styles from tab: ' + reader.tabID);
   }
